@@ -56,4 +56,4 @@ RUN pytest --cov nornir_batfish --color yes -vvv tests
 ENTRYPOINT ["pytest"]
 
 # Default to running colorful, verbose pytests
-CMD ["--cov=nornir_batfish", "--color=yes", "-vvv"]
+CMD ["--cov=nornir-batfish", "--color=yes", "-vvv"]

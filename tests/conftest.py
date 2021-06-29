@@ -18,9 +18,9 @@ def nornir():
         inventory={
             "plugin": "SimpleInventory",
             "options": {
-                "host_file": f"{DIR_PATH}/inventory_data/hosts.yaml",
-                "group_file": f"{DIR_PATH}/inventory_data/groups.yaml",
-                "defaults_file": f"{DIR_PATH}/inventory_data/defaults.yaml",
+                "host_file": f"{DIR_PATH}/inventory_data/hosts.yml",
+                "group_file": f"{DIR_PATH}/inventory_data/groups.yml",
+                "defaults_file": f"{DIR_PATH}/inventory_data/defaults.yml",
             },
         },
         logging={
