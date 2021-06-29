@@ -32,6 +32,7 @@ def nornir():
     nr_nr.data = global_data
     return nr_nr
 
+
 @pytest.fixture
 def teardown_class():
     """Teardown the automatically created log file by Nornir."""
@@ -40,11 +41,13 @@ def teardown_class():
         if os.path.exists(nornir_log):
             os.remove(nornir_log)
 
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_data():
     """Reset Data."""
     global_data.dry_run = True
     global_data.reset_failed_hosts()
+
 
 @pytest.fixture()
 def give_me_success():
