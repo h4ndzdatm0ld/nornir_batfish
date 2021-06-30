@@ -8,6 +8,7 @@ authors = ["Network to Code, LLC <info@networktocode.com>"]
 python = "^3.8"
 pydantic = {version = "^1.7.2", extras = ["dotenv"]}
 nornir = "^3.1.1"
+pybatfish = "^2021.4.12"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

@@ -5,3 +5,9 @@ services:
     build:
       context: "."
       target: "test"
+  batfish:
+    container_name: "batfish"
+    image: "batfish/batfish:test-919"
+    ports:
+      - "9996:9996"
+      - "9997:9997"
