@@ -7,7 +7,6 @@ authors = ["Network to Code, LLC <info@networktocode.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 pydantic = {version = "^1.7.2", extras = ["dotenv"]}
-toml = "0.10.1"
 nornir = "^3.1.1"
 
 [tool.poetry.dev-dependencies]
@@ -20,9 +19,11 @@ pydocstyle = "*"
 yamllint = "*"
 bandit = "*"
 invoke = "*"
-toml = "*"
 flake8 = "*"
 nornir-utils = "^0.1.2"
+coverage = "^5.5"
+pytest-cov = "^2.12.1"
+ipython = "^7.25.0"
 
 [tool.poetry.scripts]
 nornir_batfish = 'nornir_batfish.cli:main'
