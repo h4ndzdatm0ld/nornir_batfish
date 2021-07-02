@@ -1,0 +1,15 @@
+---
+version: "3.8"
+services:
+  batfish:
+    container_name: "batfish"
+    image: "batfish/batfish:test-919"
+    ports:
+      - "9996:9996"
+      - "9997:9997"
+  test:
+    build:
+      context: "."
+      target: "test"
+    depends_on:
+      - "batfish"
