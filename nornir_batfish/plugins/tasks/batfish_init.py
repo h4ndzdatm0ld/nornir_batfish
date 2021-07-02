@@ -47,6 +47,10 @@ def batfish_init(
     changed = False
     result = {}
 
+    # if set_snapshot and any(snapshot_dir, snapshot_name):
+    #     failed = True
+    #     result = "Setting a snapshot doesn't require args: snapshot_dir & snapshot_name"
+
     # Add Returns
     bf_session.host = batfish_host
     # Need logic to ensure host is reachable.
@@ -62,12 +66,13 @@ def batfish_init(
     if set_snapshot:
         result["snapshot"] = bf_set_snapshot(set_snapshot)
 
-    # Questions will always be loaded, as we can't do much without them.
-    # They must be loaded to get access to bfq.initIssues
-    load_questions()
-    if get_issues:
-        result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
+    if not failed:
+        # Questions will always be loaded, as we can't do much without them.
+        # They must be loaded to get access to bfq.initIssues
+        load_questions()
+        if get_issues:
+            result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
 
-    result["network"] = bf_set_network(set_network)
-    changed = True
-    return Result(host=task.host, result=result, failed=failed, changed=changed)
+        result["network"] = bf_set_network(set_network)
+        changed = True
+        return Result(host=task.host, result=result, failed=failed, changed=changed)
