@@ -34,6 +34,7 @@ def batfish_host():
         containers = client.containers.list()
         # Loop through all our container and extract the container names
         if [container.name for container in containers if "batfish" in container.name]:
+            print("Found an active Batfish Docker Container running.")
             batfish_host = "localhost"
     except docker.errors.DockerException:
         batfish_host = "batfish"

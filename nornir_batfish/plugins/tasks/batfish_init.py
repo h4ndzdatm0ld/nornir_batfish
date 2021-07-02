@@ -21,27 +21,40 @@ def batfish_init(
     set_network: str = None,
     set_snapshot: str = None,
     get_issues: bool = False,
+    existing_snapshot: bool = False,
 ) -> Result:
     """Initializes Batfish Snapshot.
 
     Args:
-        task (Task): Task,
-        batfish_host (str, optional): [description]. Defaults to "localhost".
-        snapshot_dir (str, optional): [description]. Defaults to None.
-        snapshot_name (str, optional): [description]. Defaults to None.
-        overwrite (str, optional): [description]. Defaults to True.
-        set_network (str, optional): [description]. Defaults to None.
-        set_snapshot (str, optional): [description]. Defaults to None.
-        get_issues (bool, optional): [description]. Defaults to False.
+        task (Task): Task.
+        batfish_host (str, optional): Batfish Instance. Defaults to "localhost".
+        snapshot_dir (str, optional): Directory of Configs. Defaults to None.
+        snapshot_name (str, optional): Snapshot Name. Defaults to None.
+        overwrite (str, optional): OverWrite Snapshot. Defaults to False.
+        set_network (str, optional): Set new or existing Network. Defaults to None.
+        set_snapshot (str, optional): Set existing snapshot. Defaults to None.
+        get_issues (bool, optional): Get Parsing Issues. Defaults to False.
+        existing_snapshot (bool, optional): Task Helper for operations. Defaults to False.
 
-    Example:
-        nornir.run(
-        task=batfish_init,
-        batfish_host=batfish_host,
-        snapshot_dir=snapshot_dir,
-        snapshot_name="PROMETHEUS",
-        get_issues=True,
+    Raises:
+        FileNotFoundError: Unable to find local snapshot directory.
+
+    Examples:
+        batfish_init:
+            bf_init = nornir.run(
+            task=batfish_init,
+            batfish_host=batfish_host,
+            snapshot_dir=snapshot_dir,
+            snapshot_name="xenomorph",
+            set_network="PROMETHEUS",
+            get_issues=True,
+            overwrite=True,
         )
+    Documentation:
+        [Interacting With Batfish](https://batfish.readthedocs.io/en/latest/notebooks/interacting.html)
+
+    Returns:
+        Result: Nornir Aggregated Results
     """
     failed = False
     changed = False
@@ -55,24 +68,29 @@ def batfish_init(
     bf_session.host = batfish_host
     # Need logic to ensure host is reachable.
 
-    # If we are NOT re-using an old snapshot
-    if not set_snapshot:
+    if existing_snapshot:
+        if not all([set_snapshot, set_network]):
+            failed = True
+            result["msg"] = "Task set to existing snapshot, but did not provide 'set_snapshot' or 'set_network'."
+        if all([set_snapshot, set_network]):
+            result["network"] = bf_set_network(set_network)
+            result["snapshot"] = bf_set_snapshot(set_snapshot)
+
+    if not existing_snapshot:
         if not _check_path(snapshot_dir):
             failed = True
-            raise ValueError(f"{snapshot_dir} not found.")
-        if not failed:  # Raising exception doesn't fail task.
+            raise FileNotFoundError(f"{snapshot_dir} not found.")
+
+        if not failed:
+            result["network"] = bf_set_network(set_network)
             result["init"] = bf_init_snapshot(snapshot_dir, name=snapshot_name, overwrite=overwrite)
 
-    if set_snapshot:
-        result["snapshot"] = bf_set_snapshot(set_snapshot)
+            # Questions will always be loaded, as we can't do much without them.
+            # They must be loaded to get access to bfq.initIssues
+            load_questions()
+            changed = True
 
-    if not failed:
-        # Questions will always be loaded, as we can't do much without them.
-        # They must be loaded to get access to bfq.initIssues
-        load_questions()
-        if get_issues:
-            result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
+    if get_issues:
+        result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
 
-        result["network"] = bf_set_network(set_network)
-        changed = True
-        return Result(host=task.host, result=result, failed=failed, changed=changed)
+    return Result(host=task.host, result=result, failed=failed, changed=changed)
