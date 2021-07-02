@@ -11,8 +11,6 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 nornir_logfile = os.environ.get("NORNIR_LOG", False)
 global_data = GlobalState(dry_run=True)
 
-# BATFISH SPECIFIC
-
 
 @pytest.fixture
 def snapshot_dir():
