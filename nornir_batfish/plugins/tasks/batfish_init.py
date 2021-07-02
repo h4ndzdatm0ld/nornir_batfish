@@ -44,33 +44,30 @@ def batfish_init(
         )
     """
     failed = False
-    changed = True
+    changed = False
+    result = {}
 
     # Add Returns
-    # Add Example
-    bf_res = {}
     bf_session.host = batfish_host
+    # Need logic to ensure host is reachable.
 
     # If we are NOT re-using an old snapshot
     if not set_snapshot:
         if not _check_path(snapshot_dir):
             failed = True
             raise ValueError(f"{snapshot_dir} not found.")
+        if not failed:  # Raising exception doesn't fail task.
+            result["init"] = bf_init_snapshot(snapshot_dir, name=snapshot_name, overwrite=overwrite)
 
-        bf_res["init"] = bf_init_snapshot(snapshot_dir, name=snapshot_name, overwrite=overwrite)
+    if set_snapshot:
+        result["snapshot"] = bf_set_snapshot(set_snapshot)
 
-        if bf_res["init"]:
-            load_questions()
-
-        if get_issues:
-            bf_res["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
-
-        return Result(host=task.host, result=bf_res, failed=failed, changed=changed)
-
-    bf_res["network"] = bf_set_network(set_network)
-    bf_res["snapshot"] = bf_set_snapshot(set_snapshot)
-
+    # Questions will always be loaded, as we can't do much without them.
+    # They must be loaded to get access to bfq.initIssues
+    load_questions()
     if get_issues:
-        bf_res["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
+        result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
 
-    return Result(host=task.host, result=bf_res, failed=failed, changed=changed)
+    result["network"] = bf_set_network(set_network)
+    changed = True
+    return Result(host=task.host, result=result, failed=failed, changed=changed)

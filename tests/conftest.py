@@ -17,7 +17,7 @@ def snapshot_dir():
     return f"{DIR_PATH}/unit/test_data/mpls_sdn_era/"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def batfish_host():
     """Evaluate wether running this locally or not to allow pipeline to execute
     properly as well as local testing with docker-compose. The batfish
@@ -33,11 +33,10 @@ def batfish_host():
         client = docker.from_env()
         containers = client.containers.list()
         # Loop through all our container and extract the container names
-        if [container.name for container in containers if container.name == "batfish"]:
+        if [container.name for container in containers if "batfish" in container.name]:
             batfish_host = "localhost"
     except docker.errors.DockerException:
         batfish_host = "batfish"
-
     return batfish_host
 
 
@@ -63,13 +62,13 @@ def nornir():
     return nr_nr
 
 
-# @pytest.fixture(scope="session", autouse=True)
-# def teardown():
-#     """Teardown the log file created by Nornir."""
-#     if not nornir_logfile:
-#         nornir_log = f"{DIR_PATH}/unit/test_data/nornir_test.log"
-#         if os.path.exists(nornir_log):
-#             os.remove(nornir_log)
+@pytest.fixture(scope="session", autouse=True)
+def teardown():
+    """Teardown the log file created by Nornir."""
+    if not nornir_logfile:
+        nornir_log = f"{DIR_PATH}/unit/test_data/nornir_test.log"
+        if os.path.exists(nornir_log):
+            os.remove(nornir_log)
 
 
 @pytest.fixture(scope="function", autouse=True)

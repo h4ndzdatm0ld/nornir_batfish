@@ -9,14 +9,10 @@ ENV PATH="$PATH:/root/.poetry/bin"
 RUN poetry config virtualenvs.create false
 
 # Install project manifest
-COPY pyproject.toml .
-
-# Install poetry.lock from which to build
-COPY poetry.lock .
+COPY poetry.lock pyproject.toml ./
 
 # Install production dependencies
 RUN poetry install --no-dev
-COPY poetry.lock .
 
 ############
 # Unit Tests
@@ -26,12 +22,13 @@ COPY poetry.lock .
 # into an image with docker-compose for running the full test suite.
 FROM base AS test
 
-# Install full dependencies
-RUN poetry install
-
-# Copy in the application source and everything not explicitly banned by
-# .dockerignore
 COPY . .
+# # Install full dependencies
+# # Copy in only pyproject.toml/poetry.lock to help with caching this layer if no updates to dependencies
+COPY pyproject.toml poetry.lock ./
+# --no-root declares not to install the project package since we're wanting to take advantage of caching dependency installation
+# and the project is copied in and installed after this step
+RUN poetry install --no-interaction --no-ansi --no-root
 
 # Simple tests
 RUN echo 'Running Flake8' && \
@@ -47,13 +44,8 @@ RUN echo 'Running Flake8' && \
     echo 'Running Bandit' && \
     bandit --recursive ./ --configfile .bandit.yml
 
-# Run unit tests only during build time to provide a fast fail mode if
-# something is broken, as well as making it impossible for someone to sneak in
-# a "unit" test which has external dependencies.
-RUN pytest --cov nornir_batfish --color yes -vvv tests
-
 # Run full test suite including integration
 ENTRYPOINT ["pytest"]
 
 # Default to running colorful, verbose pytests
-CMD ["--cov=nornir-batfish", "--color=yes", "-vvv"]
+CMD ["--cov=nornir_batfish", "--color=yes", "-vvv"]

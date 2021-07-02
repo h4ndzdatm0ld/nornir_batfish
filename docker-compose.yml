@@ -8,8 +8,11 @@ services:
       - "9996:9996"
       - "9997:9997"
   test:
+    container_name: "test"
     build:
       context: "."
       target: "test"
+    links:
+      - "batfish:bf"
     depends_on:
       - "batfish"
