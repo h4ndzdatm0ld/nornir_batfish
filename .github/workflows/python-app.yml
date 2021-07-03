@@ -48,4 +48,4 @@ jobs:
         poetry run bandit --recursive ./ --configfile .bandit.yml
     - name: Test with pytest
       run: |
-        poetry run pytest --cov=nornir_pyxl --color=yes -vvv
+        poetry run pytest --cov=nornir_batfish --color=yes -vvv
