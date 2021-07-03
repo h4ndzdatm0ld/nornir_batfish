@@ -1,41 +1,31 @@
 [tool.poetry]
-name = "nornir-batfish"
+name = "nornir_batfish"
 version = "0.1.0"
 description = "Batfish Plugin for Nornir"
-authors = ["Network to Code, LLC <info@networktocode.com>"]
+authors = ["h4ndzdatm0ld <hugotinoco@icloud.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pydantic = {version = "^1.7.2", extras = ["dotenv"]}
 nornir = "^3.1.1"
+pybatfish = "^2021.4.12"
 
 [tool.poetry.dev-dependencies]
-pytest = "*"
-requests_mock = "*"
-pyyaml = "*"
-black = "*"
-pylint = "*"
-pydocstyle = "*"
-yamllint = "*"
-bandit = "*"
-invoke = "*"
-flake8 = "*"
-nornir-utils = "^0.1.2"
-coverage = "^5.5"
+pytest = "^5.2"
+docker = "^5.0.0"
+flake8 = "^3.9.2"
+pylint = "^2.9.3"
+PyYAML = "^5.4.1"
+black = "^21.6b0"
 pytest-cov = "^2.12.1"
+nornir-utils = "^0.1.2"
+yamllint = "^1.26.1"
+bandit = "^1.7.0"
 ipython = "^7.25.0"
+pydocstyle = "^6.1.1"
 
-[tool.poetry.scripts]
-nornir_batfish = 'nornir_batfish.cli:main'
-
-[tool.nornir_batfish]
-string_required = "some string"
-array_default = ["a", "b", "c"]
-url_default = "http://localhost"
-ip_address = "192.168.0.1"
-ip_network = "2001:db8:3c4d:15::/64"
-file = "README.md"
-
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 120
@@ -78,10 +68,6 @@ notes = """,
     FIXME,
     XXX,
     """
-
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
 
 [tool.pytest.ini_options]
 testpaths = [
