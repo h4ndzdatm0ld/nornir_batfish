@@ -9,21 +9,10 @@ ENV PATH="$PATH:/root/.poetry/bin"
 RUN poetry config virtualenvs.create false
 
 # Install project manifest
-<<<<<<< HEAD
 COPY poetry.lock pyproject.toml ./
 
 # Install production dependencies
 RUN poetry install --no-dev
-=======
-COPY pyproject.toml .
-
-# Install poetry.lock from which to build
-COPY poetry.lock .
-
-# Install production dependencies
-RUN poetry install --no-dev
-COPY poetry.lock .
->>>>>>> batfish_init
 
 ############
 # Unit Tests
