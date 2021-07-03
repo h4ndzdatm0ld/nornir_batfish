@@ -3,12 +3,14 @@ version: "3.8"
 services:
   batfish:
     container_name: "batfish"
-    image: "batfish/batfish:test-919"
+    image: "batfish/batfish:test-965"
     ports:
       - "9996:9996"
       - "9997:9997"
   test:
     container_name: "test"
+    environment:
+      - "DOCKER_CONTAINER_ENV=True"
     build:
       context: "."
       target: "test"
