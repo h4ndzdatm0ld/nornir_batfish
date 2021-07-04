@@ -12,7 +12,7 @@ nornir_logfile = os.environ.get("NORNIR_LOG", False)
 global_data = GlobalState(dry_run=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
 def snapshot_dir():
     return f"{DIR_PATH}/unit/test_data/mpls_sdn_era/"
 

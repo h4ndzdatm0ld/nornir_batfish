@@ -8,10 +8,12 @@ from pybatfish.client.commands import (
 )
 from pybatfish.question import load_questions
 from pybatfish.question import bfq
-from nornir_batfish.plugins.tasks.helpers import _check_path
+from nornir_batfish.helpers.functions import _check_path
 
 
 # pylint: disable=too-many-arguments
+
+
 def batfish_init(
     task: Task,
     batfish_host: str = "localhost",
@@ -54,18 +56,14 @@ def batfish_init(
         [Interacting With Batfish](https://batfish.readthedocs.io/en/latest/notebooks/interacting.html)
 
     Returns:
-        Result: Nornir Aggregated Results
+        Result: Nornir Aggregated Results, including Batfish Session Object.
     """
     failed = False
     changed = False
     result = {}
 
-    # if set_snapshot and any(snapshot_dir, snapshot_name):
-    #     failed = True
-    #     result = "Setting a snapshot doesn't require args: snapshot_dir & snapshot_name"
-
-    # Add Returns
     bf_session.host = batfish_host
+    result["session"] = bf_session
     # Need logic to ensure host is reachable.
 
     if existing_snapshot:
