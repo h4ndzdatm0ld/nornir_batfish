@@ -2,7 +2,10 @@
 from nornir_batfish.plugins.tasks.bf_init import batfish_init
 
 # from nornir_utils.plugins.functions import print_result
-from nornir_batfish.plugins.tasks.bf_assertions_helpers import bf_assert_filter_has_no_unreachable_lines
+from nornir_batfish.plugins.tasks.bf_assertions_helpers import (
+    bf_assert_filter_has_no_unreachable_lines,
+    bf_assert_route,
+)
 
 
 def test_setup(nornir, batfish_host, snapshot_dir):
@@ -60,3 +63,22 @@ def test_failed_unreachable_lines_success(nornir, batfish_host, snapshot_dir):
         session=bf_init["nostromo"][0].result["session"],
     )
     assert not no_failure["nostromo"][0].failed
+
+
+def test_bf_assert_has_route_success(nornir, batfish_host, snapshot_dir):
+    """Initialize an existing snapshot."""
+    bf_init = nornir.run(
+        task=batfish_init,
+        batfish_host=batfish_host,
+        set_snapshot="xenomorph",
+        set_network="PROMETHEUS",
+        existing_snapshot=True,
+    )
+    # Filter must be provided, for Batfish to use to for tracing.
+    has_route = nornir.run(
+        task=bf_assert_route,
+        soft=False,
+        expected_route
+    )
+    # print_result(has_route)
+    assert not has_route["nostromo"][0].failed
