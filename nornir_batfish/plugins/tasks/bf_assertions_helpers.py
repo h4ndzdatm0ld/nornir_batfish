@@ -1,9 +1,8 @@
 """Nornir Batfish Built-In Assertion Helpers"""
+from ipaddress import IPv4Network, IPv4Address, AddressValueError, NetmaskValueError
 from nornir.core.task import Result, Task
-from pybatfish.client.asserts import assert_filter_has_no_unreachable_lines, assert_has_no_route, assert_has_route
-from typing import Optional, Union
+from pybatfish.client.asserts import assert_filter_has_no_unreachable_lines
 from pybatfish.question import bfq
-from pybatfish.client.commands import bf_list_networks, bf_list_snapshots
 
 # Docstrings Summary comes from Batfish Read the Docs documentation at
 # https://batfish.readthedocs.io/en/latest/asserts.html
@@ -46,30 +45,59 @@ def bf_assert_filter_has_no_unreachable_lines(
     return Result(host=task.host, result=result, failed=failed, changed=changed)
 
 
-def bf_assert_route(
+def bf_find_route(
     task: Task,
-    routes: Optional[dict] = None,
     expected_route: dict = None,
     node: str = None,
-    vrf: str = None,
-    soft: bool = False,
-    state: str = None,
+    vrf: str = "default",
+    state: str = "present",
 ):
 
     failed = False
     changed = False
     result = {"route": {}}
+    result["assertion"] = False
+    result["route"] = []
 
-    REQ_ARGS = all(expected_route, node, state)
+    try:
+        if expected_route.endswith("/32"):
+            IPv4Address(expected_route)
+        IPv4Network(expected_route)
+    except (AddressValueError or NetmaskValueError) as val_err:
+        failed = True
+        result["msg"] = val_err
+
+    required = [expected_route, state]
+
+    REQ_ARGS = all(required)
     if not REQ_ARGS:
         failed = True
-        result = {"msg", "Missing one of the following ARGS: 'expected_route', 'node', state'"}
+        result = {"msg", "Missing one of the following ARGS: 'expected_route, node, state'"}
 
-    # If no routes are passed in, try to get routes of currently loaded snapshot.
+    # Take pandas df and create a list of dicts
+    routes = bfq.routes().answer().frame().to_dict("records")
+
+    # Filter on both Node & VRF.
+    if all([node, vrf]):
+        node = node.lower()
+        routes = [route for route in routes if route["Node"] == node and route["VRF"] == vrf]
+    # Override VRF(default) and only filter by VRF.
+    if not node:
+        routes = [route for route in routes if route["VRF"] == vrf]
+
     if not routes:
-        routes = bfq.routes().answer().frame()
+        failed = True
+        result["msg"] = f"Unable to find routes for Node: {node} or VRF: {vrf}."
 
-    if state == "present":
-        result["assertion"] = assert_has_route(routes, expected_route, node, vrf, soft)
+    if not failed:
+        for route in routes:
+            if expected_route != route["Network"]:
+                continue
+            result["route"].append(route)
+            result["assertion"] = True
+
+    if not result["route"]:
+        failed = True
+        result["msg"] = f"Unable to find route: {expected_route}"
 
     return Result(host=task.host, result=result, failed=failed, changed=changed)

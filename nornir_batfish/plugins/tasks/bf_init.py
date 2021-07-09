@@ -88,6 +88,8 @@ def batfish_init(
             load_questions()
             changed = True
 
+    parse_status = bfq.fileParseStatus().answer().frame()
+    result["parse_status"] = parse_status
     if get_issues:
         result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101
 
