@@ -1,7 +1,6 @@
 """Utilities."""
 from pathlib import Path
 import os.path
-from typing import List
 
 
 def _check_file_ext(file_name, ext):

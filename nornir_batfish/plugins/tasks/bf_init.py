@@ -71,10 +71,10 @@ def batfish_init(
             failed = True
             result["msg"] = "Task set to existing snapshot, but did not provide 'set_snapshot' or 'set_network'."
         if all([set_snapshot, set_network]):
+            load_questions()
             result["network"] = bf_set_network(set_network)
             result["snapshot"] = bf_set_snapshot(set_snapshot)
-
-    if not existing_snapshot:
+    else:
         if not _check_path(snapshot_dir):
             failed = True
             raise FileNotFoundError(f"{snapshot_dir} not found.")
@@ -88,7 +88,7 @@ def batfish_init(
             load_questions()
             changed = True
 
-    parse_status = bfq.fileParseStatus().answer().frame()
+    parse_status = bfq.fileParseStatus().answer().frame()  # pylint: disable=E1101
     result["parse_status"] = parse_status
     if get_issues:
         result["issues"] = bfq.initIssues().answer()  # pylint: disable=E1101

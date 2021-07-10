@@ -3,6 +3,8 @@ from ipaddress import IPv4Network, IPv4Address, AddressValueError, NetmaskValueE
 from nornir.core.task import Result, Task
 from pybatfish.client.asserts import assert_filter_has_no_unreachable_lines
 from pybatfish.question import bfq
+from pybatfish.exception import BatfishAssertException
+
 
 # Docstrings Summary comes from Batfish Read the Docs documentation at
 # https://batfish.readthedocs.io/en/latest/asserts.html
@@ -21,12 +23,12 @@ def bf_assert_filter_has_no_unreachable_lines(
         because its match condition is empty or covered completely by those of prior lines.
 
     Args:
-        task (Task): [description]
-        filters (str, optional): [description]. Defaults to None.
-        soft (bool, optional): [description]. Defaults to True.
-        snapshot (str, optional): [description]. Defaults to None.
-        session (str, optional): [description]. Defaults to None. XXX
-        df_format (str, optional): [description]. Defaults to None.
+        task (Task): Nornir Task
+        filters (str, optional): ACL filter name. Defaults to None.
+        soft (bool, optional): Batfish Fail or warning. Defaults to True.
+        snapshot (str, optional): BF snapshot. Defaults to None.
+        session (str, optional): BF Session Object. Defaults to None.
+        df_format (str, optional): DataFrame Format. Defaults to None.
 
     Returns:
         Result: Nornir Result
@@ -38,10 +40,11 @@ def bf_assert_filter_has_no_unreachable_lines(
         failed = True
         result["msg"] = "Missing one of the following ARGS: 'snapshot, session or filters'"
     else:
-        assertion = assert_filter_has_no_unreachable_lines(filters, soft, snapshot, session, df_format)
-        if not assertion:
+        try:
+            assert_filter_has_no_unreachable_lines(filters, soft, snapshot, session, df_format)
+        except BatfishAssertException:
             failed = True
-        result["assertion"] = assertion
+            result["assertion"] = False
     return Result(host=task.host, result=result, failed=failed, changed=changed)
 
 
@@ -51,6 +54,17 @@ def bf_assert_route(
     node: str = None,
     vrf: str = "default",
 ):
+    """Find a route in currently loaded snapshot.
+
+    Args:
+        task (Task): Nornir Task
+        expected_route (str, optional): Expected route, must be a CIDR notation. Defaults to None.
+        node (str, optional): Device Hostname to filter routes from. Defaults to None.
+        vrf (str, optional): VRF. Defaults to "default".
+
+    Returns:
+        Result: Nornir Result
+    """
     failed = False
     changed = False
     result = {}
@@ -78,7 +92,7 @@ def bf_assert_route(
         result["assertion"] = False
 
         # Take pandas df and create a list of dicts
-        routes = bfq.routes().answer().frame().to_dict("records")
+        routes = bfq.routes().answer().frame().to_dict("records")  # pylint: disable=E1101
 
         # Filter on both Node & VRF.
         if all([node, vrf]):

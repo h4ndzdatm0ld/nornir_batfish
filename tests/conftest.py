@@ -18,6 +18,11 @@ def snapshot_dir():
 
 
 @pytest.fixture(scope="session", autouse=True)
+def networks():
+    return f"{DIR_PATH}/unit/test_data/networks/"
+
+
+@pytest.fixture(scope="session", autouse=True)
 def batfish_host():
     """Evaluate wether running this locally or not to allow pipeline to execute
     properly as well as local testing with docker-compose. The batfish
