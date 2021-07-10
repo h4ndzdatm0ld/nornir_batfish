@@ -18,6 +18,7 @@ def docker_manager(task: Task, docker_image: str = None, get_client: bool = Fals
     failed = False
     changed = False
 
+    # Add try block here and patch/test.
     client = docker.from_env()
 
     # Allow user access to full docker api-client operations
