@@ -45,59 +45,62 @@ def bf_assert_filter_has_no_unreachable_lines(
     return Result(host=task.host, result=result, failed=failed, changed=changed)
 
 
-def bf_find_route(
+def bf_assert_route(
     task: Task,
-    expected_route: dict = None,
+    expected_route: str = None,
     node: str = None,
     vrf: str = "default",
-    state: str = "present",
 ):
-
     failed = False
     changed = False
-    result = {"route": {}}
-    result["assertion"] = False
-    result["route"] = []
+    result = {}
 
-    try:
-        if expected_route.endswith("/32"):
-            IPv4Address(expected_route)
-        IPv4Network(expected_route)
-    except (AddressValueError or NetmaskValueError) as val_err:
+    # Convert this to a dict, and loop through it for missing args
+    required = [expected_route]
+    req_args = all(required)
+    if not req_args:
         failed = True
-        result["msg"] = val_err
+        result = {"msg": "Missing required args."}
 
-    required = [expected_route, state]
-
-    REQ_ARGS = all(required)
-    if not REQ_ARGS:
-        failed = True
-        result = {"msg", "Missing one of the following ARGS: 'expected_route, node, state'"}
-
-    # Take pandas df and create a list of dicts
-    routes = bfq.routes().answer().frame().to_dict("records")
-
-    # Filter on both Node & VRF.
-    if all([node, vrf]):
-        node = node.lower()
-        routes = [route for route in routes if route["Node"] == node and route["VRF"] == vrf]
-    # Override VRF(default) and only filter by VRF.
-    if not node:
-        routes = [route for route in routes if route["VRF"] == vrf]
-
-    if not routes:
-        failed = True
-        result["msg"] = f"Unable to find routes for Node: {node} or VRF: {vrf}."
+    if all(required):
+        try:
+            if expected_route.endswith("/32"):
+                expected_route = expected_route.replace("/32", "")
+                IPv4Address(expected_route)
+                expected_route = f"{expected_route}/32"
+            IPv4Network(expected_route)
+        except (AddressValueError, NetmaskValueError) as val_err:
+            failed = True
+            result["msg"] = val_err
 
     if not failed:
-        for route in routes:
-            if expected_route != route["Network"]:
-                continue
-            result["route"].append(route)
-            result["assertion"] = True
+        result = {"route": []}
+        result["assertion"] = False
 
-    if not result["route"]:
-        failed = True
-        result["msg"] = f"Unable to find route: {expected_route}"
+        # Take pandas df and create a list of dicts
+        routes = bfq.routes().answer().frame().to_dict("records")
+
+        # Filter on both Node & VRF.
+        if all([node, vrf]):
+            node = node.lower()
+            routes = [route for route in routes if route["Node"] == node and route["VRF"] == vrf]
+        # Override VRF(default) and only filter by VRF.
+        if not node:
+            routes = [route for route in routes if route["VRF"] == vrf]
+
+        if not routes:
+            failed = True
+            result["msg"] = f"Unable to find routes for Node: {node} or VRF: {vrf}."
+
+        if not failed:
+            for route in routes:
+                if expected_route != route["Network"]:
+                    continue
+                result["route"].append(route)
+                result["assertion"] = True
+
+        if not result["route"]:
+            failed = True
+            result["msg"] = f"Unable to find route: {expected_route}"
 
     return Result(host=task.host, result=result, failed=failed, changed=changed)
